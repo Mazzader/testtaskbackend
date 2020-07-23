@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+
+  djangoapp:
+    restart: always
+    build: .
+    volumes:
+      - .:/app:z
+    networks:
+      - nginx_network
+      - db_network
+    depends_on:
+      - db
+
+  nginx:
+    restart: always
+    image: nginx:stable
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:z
+    depends_on:
+      - djangoapp
+    ports:
+      - 8080:80
+    networks:
+      - nginx_network
+
+  db:
+    restart: always
+    image: postgres:latest
+    env_file:
+      - config/db/db_env
+    networks:
+      - db_network
+    volumes:
+      - db_volume:/var/lib/postgresql/data:z
+
+networks:
+  nginx_network:
+    driver: bridge
+  db_network:
+    driver: bridge
+
+volumes:
+  db_volume:
